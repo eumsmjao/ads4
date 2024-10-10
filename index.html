@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat ODS 5 - Igualdade de Gênero</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #FFE5E5;
+        }
+        .container {
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .chat-column {
+            flex: 2;
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .info-column {
+            flex: 1;
+            margin-left: 20px;
+        }
+        .info-box {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #FF3A21;
+            margin-top: 0;
+        }
+        #chat-container {
+            height: 400px;
+            overflow-y: scroll;
+            border: 1px solid #FF3A21;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #FFF0F0;
+        }
+        #user-input {
+            width: calc(100% - 80px);
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #FF3A21;
+        }
+        #send-button {
+            padding: 10px 20px;
+            background-color: #FF3A21;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #send-button:hover {
+            background-color: #E62E1B;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="chat-column">
+            <h1>Chat sobre ODS 5 - Igualdade de Gênero</h1>
+            <div id="chat-container"></div>
+            <input type="text" id="user-input" placeholder="Digite sua mensagem...">
+            <button id="send-button">Enviar</button>
+        </div>
+        <div class="info-column">
+            <div class="info-box">
+                <h2>Curiosidades sobre ODS 5</h2>
+                <ul>
+                    <li>O ODS 5 visa alcançar a igualdade de gênero e empoderar todas as mulheres e meninas.</li>
+                    <li>Uma das metas é eliminar todas as formas de violência contra mulheres e meninas.</li>
+                    <li>Outra meta importante é garantir a participação plena e efetiva das mulheres na vida política, econômica e pública.</li>
+                    <li>O ODS 5 também busca garantir o acesso universal à saúde sexual e reprodutiva.</li>
+                </ul>
+            </div>
+            <div class="info-box">
+                <h2>Sobre a ONU</h2>
+                <ul>
+                    <li>A ONU foi fundada em 1945, após a Segunda Guerra Mundial.</li>
+                    <li>Atualmente, a ONU tem 193 Estados-Membros.</li>
+                    <li>A ONU-Mulheres, criada em 2010, é a entidade das Nações Unidas para a Igualdade de Gênero e o Empoderamento das Mulheres.</li>
+                    <li>A Agenda 2030, que inclui os 17 ODS, foi adotada por todos os Estados-Membros da ONU em 2015.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+
+        const apiEndpoint = 'https://alexa-m20y9agv-francecentral.openai.azure.com/openai/deployments/gpt-35-turbo/chat/completions?api-version=2023-03-15-preview';
+        const apiKey = '5f74eb8579e44d3db55d9548a13d7eb1';
+
+        let conversationHistory = [
+            {"role": "system", "content": "Você é um assistente de IA que responde perguntas sobre o ODS 5 (Igualdade de Gênero) da ONU."}
+        ];
+
+        function addMessageToChat(role, content) {
+            const messageElement = document.createElement('p');
+            messageElement.innerHTML = `<strong>${role}:</strong> ${content}`;
+            chatContainer.appendChild(messageElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const userMessage = userInput.value.trim();
+            if (userMessage === '') return;
+
+            addMessageToChat('Você', userMessage);
+            userInput.value = '';
+
+            conversationHistory.push({"role": "user", "content": userMessage});
+
+            try {
+                const response = await fetch(apiEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'api-key': apiKey
+                    },
+                    body: JSON.stringify({
+                        messages: conversationHistory,
+                        max_tokens: 800,
+                        temperature: 0.7,
+                        top_p: 0.95,
+                        frequency_penalty: 0,
+                        presence_penalty: 0
+                    })
+                });
+
+                const data = await response.json();
+                const assistantReply = data.choices[0].message.content;
+
+                addMessageToChat('Assistente', assistantReply);
+                conversationHistory.push({"role": "assistant", "content": assistantReply});
+
+            } catch (error) {
+                console.error('Erro ao enviar mensagem:', error);
+                addMessageToChat('Sistema', 'Desculpe, ocorreu um erro ao processar sua mensagem.');
+            }
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
